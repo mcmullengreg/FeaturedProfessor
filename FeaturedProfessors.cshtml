@@ -1,0 +1,86 @@
+@using umbraco.MacroEngines
+@inherits umbraco.MacroEngines.DynamicNodeContext	
+@{ 
+	@* Pagination - With 10 items per page *@
+    int pageSize; // How many items per page
+    int page; // The page we are viewing
+	var showPages = @Parameter.ShowPageNum;
+	var root = Model.AncestorOrSelf();
+	var featured = @Parameter.featureFirst;
+	
+    /* Set up parameters */
+	if (!int.TryParse(Parameter.numberOfItems, out pageSize))
+	{
+		pageSize = 10;
+	}
+	
+    if (!int.TryParse(Request.QueryString["page"], out page))
+    {
+        page = 1;
+    }
+
+    /* This is your basic query to select the nodes you want */
+    var nodes = root.Descendants("YOURDOCTYPENAMEHERE");
+    int totalNodes = nodes.Count();
+    int totalPages = (int)Math.Ceiling((double)totalNodes / (double)pageSize);
+    
+    /* Bounds checking */
+    
+    if (page > totalPages)
+    {
+        page = totalPages;  
+    }
+    else if (page < 1)
+    {
+        page = 1;
+    }
+}
+			
+    @foreach (var item in nodes.Skip((page - 1) * pageSize).Take(pageSize))
+    {
+		if ( item.IsFirst() && featured == "1" && page == 1) { 
+			<div class="featured-prof">
+			<h1>Professor Spotlight:</h1>
+				@item.mainContent 
+			</div>
+			<hr style="background:#e8e8e8; border:1px solid #e8e8e8;" />
+			<h2>Archive:</h2>
+		} else{
+		var image = "";
+		
+		<div class="news-list" style="margin-bottom:10px; clear:both;">
+			<h2><a href="@item.Url">@item.Name</a></h2>	
+			@if ( item.Media("pageThumbnail") != null ) {
+				image = item.Media("pageThumbnail").umbracoFile;
+				<img class="float-lmr" src="/imagegen.ashx?width=100&image=@image" title="@item.Name" alt="@item.Name" />
+			}
+			<p>@item.pageSummary</p>
+			<p><a href="@item.Url" title="Read more about @item.Name">Read more about @item.Name</a></p>
+		</div>
+		}
+    }
+@if ( @Parameter.showPageNum == "1" && totalPages > 1 ) {
+<div class="pagination">
+	<p><strong>More stories:</strong></p>
+    @for (int p = 1; p < totalPages + 1; p++)
+    {
+		int radius = 5;
+		int nextPage = page + 1;
+		int prevPage = page - 1;
+		if (prevPage == 0){ prevPage = 1; }
+		string selected = (p == page) ? "class=selected style=font-weight:bold;" : String.Empty;
+		if (p == 1 && p != page) { 
+			<a href="?page=@prevPage" rel="prev">&laquo; Previous</a>
+		}
+		if( p == 1  || p < totalPages && ( p > page - radius && p < page + radius ) || p == totalPages && (p > totalPages - radius ) ) {
+			<a @selected href="?page=@p">@p</a>
+		} else if ( p == page - radius || p == page + radius ){
+			@Html.Raw(" ... ");
+		}
+		if (p == totalPages && page != totalPages) { 
+			<a href="?page=@nextPage" rel="next">Next &raquo</a> 
+		}
+	}
+	</div><!-- .pagination -->
+
+}
