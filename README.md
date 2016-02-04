@@ -1,5 +1,7 @@
 ##Featured Professors Macro for Rose-Hulman Institute of Technology
 
+** This project was designed for Umbraco 4.x **
+
 This macro uses a custom document type within Umbraco to determine the descendants to pull in for the feed.
 
 This macro has three custom parameters (listed by alias and type):
